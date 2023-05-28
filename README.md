@@ -5,6 +5,8 @@ Source code for CategoricalClassification library useful for easy categorical da
 ## Dependencies
 
 - numpy
+- itertools combinations
+- math
 
 ## Usage
 _CategoricalClassification_ is a library designed to quickly and easily generate binary categorical datasets. It supports both linearly and non-linearly separable dataset generation, as well as various noise simulating functions.

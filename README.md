@@ -50,10 +50,6 @@ Applying missing values to 35% of any dataset X.
 X = cc.replace_with_none(X, 0.35, seed=42)
 ```
 
-X, y = cc.generate_linear_binary_data(n_informative, n_redundant, samples=n_samples, seed=seed)
-```
-The output consists of a dataset with the informative features on lowest indices and redundant concatenated after that and a list of labels.
-
 ## License
 
 CategoricalClassification is released under the Apache License 2.0. See the [LICENSE](LICENSE) file for more details.

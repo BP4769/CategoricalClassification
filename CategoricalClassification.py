@@ -5,19 +5,22 @@ from itertools import combinations
 class CategoricalClassification:
 
     ##############################################################################################################
-    ###     GENERATION PART     ##################################################################################
+    ###     DATA GENERATION     ##################################################################################
     ##############################################################################################################
     
 
     def generate_features(self, label, logical_expression, n_features=2, seed=None):
         """
-            Generate features for a given label using a logical expression
-            label: the label to generate features for
-            logical_expression: the logical expression to use
-            n_features: the number of features to generate
-            seed: random seed
+            Generates features for a given label using a logical expression
+                Args:
+                    label: the label to generate features for
+                    logical_expression: the logical expression to use
+                    n_features: the number of features to generate
+                    seed: random seed
+                Returns:
+                    a numpy array of features
 
-            returns: a numpy array of features
+            features = generate_features(label, xor, n_features=2, seed=42)
         """
         # Parameter validation:
         if n_features < 1:
@@ -89,13 +92,15 @@ class CategoricalClassification:
 
     def generate_binary_labels(self, N, p, seed=None):
         """
-            Generate a vector of binary labels with probability p.
+            Generates a vector of binary labels with probability p.
                 Args:
                     N: Number of labels to generate.
                     p: Probability of a label being 1.
                     seed: Random seed.
                 Returns:
                     A vector of binary labels.
+
+            labels = generate_binary_labels(50, 0.5, seed=42)
         """
         # Parameter validation:
         if N < 1:
@@ -126,6 +131,8 @@ class CategoricalClassification:
                     seed: Random seed.
                 Returns:
                     A numpy array of binary samples.
+
+            hcube = _generate_hypercube(10, 10, replace=True, seed=42)
         """
         # Parameter validation:
         if samples < 1:
@@ -166,6 +173,8 @@ class CategoricalClassification:
                     labels: Labels to generate.
                 Returns:
                     A tuple of (features, labels).
+
+            X,y = generate_linear_binary_data(10, useless_dimensions=40, samples=500, seed=42)
         """
         # Parameter validation:
         if dimensions < 1:
@@ -204,8 +213,9 @@ class CategoricalClassification:
             # tak a bigger sample size to account for the fact that we will be 
             # dropping some samples if the ratio is not balanced
             samples = len(labels)
+            samples_3 = 3 * samples
             # Generate hypercube samples with categorical features
-            X = self._generate_hypercube(3*samples, dimensions, replace=True)
+            X = self._generate_hypercube(samples_3, dimensions, replace=True)
         else:
             # Generate hypercube samples with categorical features
             X = self._generate_hypercube(samples, dimensions, replace=True)
@@ -227,7 +237,10 @@ class CategoricalClassification:
             coefficients[i, -1] = -np.dot(hyperplane_normal, center)  # Set the bias term
 
         # Add a column of ones to X for the bias term in the hyperplane equations
-        X_with_bias = np.hstack((X, np.ones((samples, 1))))
+        if labels is not None:
+            X_with_bias = np.hstack((X, np.ones((samples_3, 1))))
+        else:
+            X_with_bias = np.hstack((X, np.ones((samples, 1))))
         # Compute the dot product between X and the coefficients for each cluster
         dot_product = np.dot(X_with_bias, coefficients.T)
         # Assign labels based on the cluster with the maximum dot product
@@ -266,6 +279,8 @@ class CategoricalClassification:
                     M: maximum needed points
                 Returns:
                     List of points within distance n from center
+
+            points = _change_variations(c, 2, 10)
         """
 
         variations = [center]  # Initialize the list with the original vector
@@ -311,6 +326,10 @@ class CategoricalClassification:
                     h_list: list of centres of hyperspheres
                     c: point in space
                     norm: optional norm, default 2, used to check overlap
+                Returns:
+                    bool
+
+            overlap = _check_overlap(centers, c, norm=1)
         """
         for h in h_list:
             if np.linalg.norm(h - c) <= norm:
@@ -330,6 +349,8 @@ class CategoricalClassification:
                     seed: seed for numpy random
                 Returns:
                     A tuple of (samples, labels)
+
+            X,y = generate_nonlinear_data_hyperspheres(10, 500, p=0.5, n_irrelevant=50)
         """
 
         if not isinstance(n_features, int):
@@ -467,8 +488,7 @@ class CategoricalClassification:
 
     def generate_nonlinear_data(self, n_features, n_samples, p=0.5, n_irrelevant=0, labels=None, seed=42):
         """
-                   Generates relevant, nonlinear, binary dataset by squaring the sum of randomly weighted and biased features
-                   and applying an adaptive threshold
+                   Generates nonlinear, binary dataset by squaring the sum of randomly weighted and biased features and applying an adaptive threshold
                        Args:
                            n_features: int, number of relevant features
                            n_samples: int, number of samples
@@ -479,6 +499,8 @@ class CategoricalClassification:
                            seed: seed for numpy random
                        Returns:
                            A tuple of (samples, labels)
+
+                   X,y = generate_nonlinear_data(10, 500, p=0.5, n_irrelevant=40)
                """
 
         if not isinstance(n_features, int):
@@ -558,22 +580,24 @@ class CategoricalClassification:
 
 
     ##############################################################################################################
-    ###     NOISE PART     #######################################################################################
+    ###     SIMULATING NOISE     #################################################################################
     ##############################################################################################################
 
     def cardinality_noise(self, labels, cardinality, number_of_relevant_features, number_of_irrelevant_features,
                           logical_combination_function, replace_redundant, seed = None):
-        """Add noise to the cardinality of a set of labels.
-        Args:
-            labels: A list of labels.
-            cardinality: Vector of cardinalities of features corresponding to each label.
-            number_of_relevant_features: Number of features that are relevant to the label.
-            number_of_irrelevant_features: Number of features that are irrelevant to the label.
-            logical_combination_function: A function that takes in a set of features and returns a logical combination of them.
-            replace_redundant: Whether to perform the replacement of 0/1 after or before adding redundant features.
-            seed: Random seed.
-        Returns:
-            The noisy dataset.
+        """
+        Adds noise to the cardinality of a set of labels.
+            Args:
+                labels: A list of labels.
+                cardinality: Vector of cardinalities of features corresponding to each label.
+                number_of_relevant_features: Number of features that are relevant to the label.
+                number_of_irrelevant_features: Number of features that are irrelevant to the label.
+                logical_combination_function: A function that takes in a set of features and returns a logical combination of them.
+                replace_redundant: Whether to perform the replacement of 0/1 after or before adding redundant features.
+                seed: Random seed.
+            Returns:
+                The noisy dataset.
+
         """
         # Parameter validation:
         if not isinstance(labels, list):
@@ -630,13 +654,14 @@ class CategoricalClassification:
         return new_features
 
     def replace_with_cardinality(self, arr, cardinality, seed=None):
-        """Replace each 1 and 0 with a different random number according to the cardinality.
-        Args:
-            arr: A numpy array.
-            cardinality: Vector of cardinalities of features corresponding to each label.
-            seed: Random seed.
-        Returns:
-            The noisy dataset.
+        """
+            Replaces each 1 and 0 with a different random number according to the cardinality.
+                Args:
+                    arr: A numpy array.
+                    cardinality: Vector of cardinalities of features corresponding to each label.
+                    seed: Random seed.
+                Returns:
+                    The noisy dataset.
         """
         # Parameter validation:
         if not isinstance(arr, np.ndarray):
@@ -664,11 +689,12 @@ class CategoricalClassification:
     def replace_with_none(self, arr, f, seed=None):
         """
             Simulates missing data by replacing random values with None
-                :param arr: input array
-                :param f: percentage of missing data
-                :param seed: int, seed
-
-                returns input array with missing data
+                Args:
+                    arr: input array
+                    f: percentage of missing data
+                    seed: int, seed
+                Returns:
+                    input array with missing data
         """
         # Parameter validation:
         if not isinstance(arr, np.ndarray):
@@ -692,11 +718,12 @@ class CategoricalClassification:
     def rand_bin_features(self, N, n, seed):
         """
             Generates random, irrelevant features
-                :param n: int, number of features
-                :param N: int, number of samples
-                :param seed: int, seed
-
-                returns 2D array of shape (N, n)
+                Args:
+                    n: int, number of features
+                    N: int, number of samples
+                    seed: int, seed
+                Returns:
+                    2D array of shape (N, n)
 
             X_rand = rand_bin_features(8, 46, 42)
 
@@ -718,14 +745,16 @@ class CategoricalClassification:
     def missing_values_noise(self, labels, **args):
         """
             Generates binary dataset on given labels, given parameters:
-                :param logic: func, dictates the logic function for labels, default xor
-                :param n_relevant: int, number of relevant features, default 2
-                :param n_total: int, number of total features, default 100
-                :param noise: float, amount of noise, default 0.0, applied to relevant features
-                :param missing: float, amount of missing data, default 0.0, applied to all features
-                :param seed: int, seed applied to np.random
+                Args:
+                    logic: func, dictates the logic function for labels, default xor
+                    n_relevant: int, number of relevant features, default 2
+                    n_total: int, number of total features, default 100
+                    noise: float, amount of noise, default 0.0, applied to relevant features
+                    missing: float, amount of missing data, default 0.0, applied to all features
+                    seed: int, seed applied to np.random
 
-                returns 2D array of shape (len(labels), n_total)
+                Returns:
+                    2D array of shape (len(labels), n_total)
 
             X = missing_values_noise(labels, logic=corrAL, n_relevant=4, n_total=50, noise=0.1, missing=0.2, seed=42)
 
@@ -792,7 +821,7 @@ class CategoricalClassification:
 
         # print("relevant shape:", rel_features.shape)
 
-        # TODO: add noise to relevant features by randomly changing their value
+
 
         # generate 2D numpy featureset
         feature_set = np.empty((len(labels), n_total), dtype='int16')
@@ -814,11 +843,14 @@ class CategoricalClassification:
     def noisy_column_bin(self, x, p=0.1, seed=None):
         """
             Adds noise to binary column
-                :param x: 1D array of binary data
-                :param p: float, probability of a value being flipped
-                :param seed: int, seed applied to np.random
+                Args:
+                    x: 1D array of binary data
+                    p: float, probability of a value being flipped
+                    seed: int, seed applied to np.random
+                Returns:
+                    1D numpy array of noisy data
 
-                returns 1D numpy array of noisy data
+            x = noisy_column_bin(x, p=0.1)
         """
         # Parameter validation:
         if not isinstance(x, np.ndarray):
@@ -849,11 +881,14 @@ class CategoricalClassification:
     def noisy_column_cat(self, x, p=0.1, seed=None):
         """
             Adds noise to categorical column
-                :param x: 1D array of categorical data
-                :param p: float, probability of a value being flipped
-                :param seed: int, seed applied to np.random
+                Args:
+                    x: 1D array of categorical data
+                    p: float, probability of a value being flipped
+                    seed: int, seed applied to np.random
+                Returns:
+                    1D numpy array of noisy data
 
-                returns 1D numpy array of noisy data
+            x = noisy_column_cat(x, p=0.1)
         """
         # Parameter validation:
         if not isinstance(x, np.ndarray):
@@ -901,12 +936,15 @@ class CategoricalClassification:
     def noisy_data_cat(self, X, p=0.1, seed=None):
         """"
             Adds noise to categorical data (each column is treated as a categorical variable)
-                :param X: 2D array of categorical data
-                :param p: float, probability of a value being flipped
-                         or list of floats, probability of a value being flipped for each column
-                :param seed: int, seed applied to np.random
+                Args:
+                    X: 2D array of categorical data
+                    p: float, probability of a value being flipped
+                        or list of floats, probability of a value being flipped for each column
+                    seed: int, seed applied to np.random
+                Returns:
+                    noisy data X
 
-                returns noisy data
+            X = noisy_data_cat(X, p=0.1)
         """
         # Parameter validation:
         if not isinstance(X, np.ndarray):
@@ -934,14 +972,15 @@ class CategoricalClassification:
     def gen_categorical_noise(self, labels, logic, n_relevant=2, n_total=100, noise=0.1, seed=None):
         """
             Generates binary dataset on given labels, given parameters:
-                :param labels: 1D array of labels
-                :param logic: func, dictates the logic function for labels, default xor
-                :param n_relevant: int, number of relevant features, default 2
-                :param n_total: int, number of total features, default 100
-                :param noise: float, amount of noise, default 0.0, applied to relevant features
-                :param seed: int, seed applied to np.random
-
-                returns 2D array of shape (len(labels), n_total)
+                Args:
+                    labels: 1D array of labels
+                    logic: func, dictates the logic function for labels, default xor
+                    n_relevant: int, number of relevant features, default 2
+                    n_total: int, number of total features, default 100
+                    noise: float, amount of noise, default 0.0, applied to relevant features
+                    seed: int, seed applied to np.random
+                Returns:
+                    2D array of shape (len(labels), n_total)
 
             X = gen_categorical_noise(labels, logic=corrAL, n_relevant=4, n_total=50, noise=0.1)
 

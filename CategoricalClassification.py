@@ -381,12 +381,13 @@ class CategoricalClassification:
         if p is not None:
             n_class_1 = int(n_samples * p)
             n_class_0 = n_samples - n_class_1
-        elif labels is not None:
+        if labels is not None:
             n_class_0 = (labels == 0).sum()
             n_class_1 = n_samples - n_class_0
 
         # print(n_class_1, n_class_0)
-
+        p = n_class_1 / n_samples
+        
         generated_labels = np.append(np.ones(n_class_1), np.zeros(n_class_0))
 
         class_1_features = []
@@ -530,12 +531,13 @@ class CategoricalClassification:
         if p is not None:
             n_class_1 = int(n_samples * p)
             n_class_0 = n_samples - n_class_1
-        elif labels is not None:
+        if labels is not None:
             n_class_0 = (labels == 0).sum()
             n_class_1 = n_samples - n_class_0
 
-            p = n_samples / n_class_1
-
+        p = n_class_1 / n_samples
+        
+        #print(n_samples, p, n_class_1, n_class_0)
         generated_labels = np.append(np.ones(n_class_1), np.zeros(n_class_0))
 
         for i in range(n_features):
@@ -547,7 +549,8 @@ class CategoricalClassification:
         y_min = np.min(generated_labels)
         y_max = np.max(generated_labels)
         generated_labels = (generated_labels - y_min) / (y_max - y_min)
-
+        #print("dolzina:", len(generated_labels))
+        
         if p < 1.0:
             threshold = np.percentile(generated_labels, 100 - p * 100)
             generated_labels = (generated_labels > threshold).astype(int)

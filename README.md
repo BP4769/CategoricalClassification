@@ -7,23 +7,46 @@ Source code for CategoricalClassification library useful for easy categorical da
 - numpy
 
 ## Usage
+_CategoricalClassification_ is a library designed to quickly and easily generate binary categorical datasets. It supports both linearly and non-linearly separable dataset generation, as well as various noise simulating functions.
 
-1. Import the required modules:
-
+### Importing
+Once copied to your working directory, _CategoricalClassification_ can be imported as any other Python library. 
 ```python
-import numpy
 from CategoricalClassification import CategoricalClassification
-```
-
-2. Creating an instance of the CategoricalClassification and generating a linearly seperable dataset with it:
-
-```python
 cc = CategoricalClassification()
-n_informative = 3
-n_total = 10
-n_redundant = n_total - n_informative
-n_samples = 10
-seed = 42
+```
+### Generating a linearly separable datasets
+Generates a linearly separable dataset with 100 relevant features, 400 irrelevant features, 10000 samples, with a seed of 42.
+```python
+X,y = cc.generate_linear_binary_data(100, 400, samples=10000, seed=42)
+```
+Generates a linearly separable dataset with 100 relevant features and 400 irrelevant features from a label array.
+```python
+labels = cc.generate_binary_labels(10000, 0.5, seed=42)
+X,y = cc.generate_linear_binary_data(100,400, labels=labels, seed=42)
+```
+Generates a non-linearly separable dataset with 100 relevant features, 400 irrelevant features, 10000 samples, with a seed of 42.
+```python
+X,y = cc.generate_nonlinear_data(100, 10000, p=0.5, n_irrelevant=400, seed=42)
+```
+Generates a non-linearly separable dataset with 100 relevant features and 400 irrelevant features from a label array.
+```python
+labels = cc.generate_binary_labels(10000, 0.5, seed=42)
+X,y = cc.generate_nonlinear_data(100, 10000, n_irrelevant=400, labels=labels, seed=42)
+```
+### Applying noise to datasets
+Applying cardinal noise to any binary or categorical dataset X, cardinality of 10 to class label 1.
+```python
+X = cc.replace_with_cardinality(X, [10, 1], seed=42)
+```
+Applying categorical noise to 20% of any binary dataset X.
+```python
+X = cc.noisy_data_cat(X, p=0.2, seed=42)
+```
+Applying missing values to 35% of any dataset X.
+```python
+X = cc.replace_with_none(X, 0.35, seed=42)
+```
 
 X, y = cc.generate_linear_binary_data(n_informative, n_redundant, samples=n_samples, seed=seed)
 ```

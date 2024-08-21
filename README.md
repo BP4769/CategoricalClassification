@@ -2,6 +2,11 @@
 
 Source code for CategoricalClassification library useful for easy categorical dataset creation.
 
+<p align="center">
+  <img src="pictures/tutorial.gif" alt="Tutorial how to generate binary data and add noise" width="80%"/>
+</p>
+
+
 ## Dependencies
 
 - numpy
